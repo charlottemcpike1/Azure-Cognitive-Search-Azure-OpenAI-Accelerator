@@ -15,7 +15,7 @@ from langchain.schema import AgentAction, AgentFinish, LLMResult
 
 #custom libraries that we will use later in the app
 from utils import DocSearchTool, CSVTabularTool, SQLDbTool, ChatGPTTool, BingSearchTool, run_agent
-from prompts import CUSTOM_CHATBOT_PREFIX, CUSTOM_CHATBOT_SUFFIX 
+from prompts import WELCOME_MESSAGE, CUSTOM_CHATBOT_PREFIX, CUSTOM_CHATBOT_SUFFIX
 
 from botbuilder.core import ActivityHandler, TurnContext
 from botbuilder.schema import ChannelAccount, Activity, ActivityTypes
@@ -33,7 +33,7 @@ class BotServiceCallbackHandler(BaseCallbackHandler):
     
     def __init__(self, turn_context: TurnContext) -> None:
         self.tc = turn_context
-    
+
     def on_llm_error(self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any) -> Any:
         asyncio.run(self.tc.send_activity(f"LLM Error: {error}\n"))
 
@@ -61,7 +61,7 @@ class MyBot(ActivityHandler):
         cb_handler = BotServiceCallbackHandler(turn_context)
         cb_manager = CallbackManager(handlers=[cb_handler])
 
-        llm = AzureChatOpenAI(deployment_name=self.MODEL_DEPLOYMENT_NAME, temperature=0.5, max_tokens=500, callback_manager=cb_manager)
+        llm = AzureChatOpenAI(deployment_name=self.MODEL_DEPLOYMENT_NAME, temperature=0.5, max_tokens=1000, callback_manager=cb_manager)
 
         # Initialize our Tools/Experts
         indexes = ["cogsrch-index-files", "cogsrch-index-csv"]
@@ -88,4 +88,4 @@ class MyBot(ActivityHandler):
     async def on_members_added_activity(self, members_added: ChannelAccount, turn_context: TurnContext):
         for member_added in members_added:
             if member_added.id != turn_context.activity.recipient.id:
-                await turn_context.send_activity("Hello and welcome!")
+                await turn_context.send_activity(WELCOME_MESSAGE)
